@@ -17,8 +17,7 @@ fn main() {
 fn count_increasements(numbers: &[i32]) -> usize {
     numbers
         .windows(2)
-        .map(|window| window[0] < window[1])
-        .filter(|value| *value)
+        .filter(|window| window[0] < window[1])
         .count()
 }
 
