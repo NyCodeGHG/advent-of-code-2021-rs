@@ -35,15 +35,12 @@ enum Action {
 impl Action {
     pub fn from_string(string: &str) -> Option<Self> {
         let split: Vec<&str> = string.split(' ').collect();
-        let number: i32 = match split.last().and_then(|s| s.parse::<i32>().ok()) {
-            Some(n) => n,
-            None => return None,
-        };
-        split.first().and_then(|action| match *action {
+        let number: i32 = split.last()?.parse::<i32>().ok()?;
+        match *split.first()? {
             "forward" => Some(Self::Forward(number)),
             "down" => Some(Self::Down(number)),
             "up" => Some(Self::Up(number)),
             _ => None,
-        })
+        }
     }
 }
