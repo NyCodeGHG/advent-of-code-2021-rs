@@ -69,7 +69,7 @@ fn find_co2_scrubber_rating(numbers: &[Vec<u32>], position: usize) -> Option<i32
         .filter(|number| number.get(position).unwrap() == target_value)
         .cloned()
         .collect();
-        find_co2_scrubber_rating(&numbers, position + 1)
+    find_co2_scrubber_rating(&numbers, position + 1)
 }
 
 fn get_most_frequent_value<T: Ord + Hash + Copy>(values: &[T]) -> Option<T> {
