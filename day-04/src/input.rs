@@ -9,11 +9,9 @@ pub fn read_input() -> BingoGame {
         .map(|line| line.to_string())
         .collect();
 
-    let mut draw_order = content
-        .iter()
-        .next()
+    let mut draw_order = content.get(0)
         .unwrap()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<u32>().unwrap())
         .collect::<Vec<u32>>();
     draw_order.reverse();
@@ -45,5 +43,6 @@ pub fn read_input() -> BingoGame {
         draw_order,
         boards,
         last_drawn: None,
+        winners: vec![],
     }
 }
