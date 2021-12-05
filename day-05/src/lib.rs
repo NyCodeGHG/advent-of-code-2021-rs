@@ -1,6 +1,9 @@
-use std::cmp::{min, max};
-use regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
+use std::{
+    cmp::{max, min},
+    ops::Range,
+};
 
 pub type Point = (u32, u32);
 
@@ -27,19 +30,43 @@ impl Line {
         );
         Ok(Line { a, b })
     }
-    pub fn get_line_points(&self) -> Option<Vec<Point>> {
+    pub fn get_line_points(&self, diagonal_lines: bool) -> Option<Vec<Point>> {
         let (x1, y1) = self.a;
         let (x2, y2) = self.b;
         if x1 == x2 {
-            let a = min(y1, y2);
-            let b = max(y1, y2);
-            Some((a..=b).map(|y| (x1, y)).collect())
+            Some(
+                range(&Range { start: y1, end: y2 })
+                    .iter()
+                    .map(|y| (x1, *y))
+                    .collect(),
+            )
         } else if y1 == y2 {
-            let a = min(x1, x2);
-            let b = max(x1, x2);
-            Some((a..=b).map(|x| (x, y1)).collect())
+            Some(
+                range(&Range { start: x1, end: x2 })
+                    .iter()
+                    .map(|x| (*x, y1))
+                    .collect(),
+            )
+        } else if diagonal_lines {
+            Some(
+                range(&Range { start: x1, end: x2 })
+                    .iter()
+                    .zip(range(&Range { start: y1, end: y2 }).iter())
+                    .map(|(x, y)| (*x, *y))
+                    .collect(),
+            )
         } else {
             None
         }
     }
+}
+
+fn range(range: &Range<u32>) -> Vec<u32> {
+    let a = min(range.start, range.end);
+    let b = max(range.start, range.end);
+    let mut result = (a..=b).collect::<Vec<u32>>();
+    if range.start > range.end {
+        result.reverse();
+    }
+    result
 }
