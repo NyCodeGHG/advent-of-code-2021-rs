@@ -4,7 +4,7 @@ fn main() {
     let actions: Vec<Action> = fs::read_to_string("inputs/day02.txt")
         .expect("Unable to read input")
         .lines()
-        .filter_map(|line| Action::from_string(line))
+        .filter_map(Action::from_string(line))
         .collect();
     let (depth, pos) = actions
         .iter()
