@@ -12,15 +12,20 @@ fn main() {
         .filter_map(|v| v.parse::<i32>().ok())
         .collect();
     let now = SystemTime::now();
-    let (fuel, pos) =
-        calculate_fuel(&crabs, |crab, pos| i32::abs(crab - pos)).expect("No solution found");
-    println!("Position: {}, Fuel: {}", pos, fuel);
-    let (fuel, pos) = calculate_fuel(&crabs, fuel_steps).expect("No solution found");
-    println!("Position: {}, Fuel: {}", pos, fuel);
+    let (fuel_one, fuel_two) = get_solution(&crabs);
+    println!("Fuel: {}", fuel_one);
+    println!("Fuel: {}", fuel_two);
     println!("Solution took {}ms", now.elapsed().unwrap().as_millis());
 }
 
-fn calculate_fuel<F>(crabs: &[i32], fuel_algorithm: F) -> Option<(i32, i32)>
+fn get_solution(crabs: &[i32]) -> (i32, i32) {
+    (
+        calculate_fuel(crabs, |crab, pos| i32::abs(crab - pos)).expect("No solution found"),
+        calculate_fuel(crabs, fuel_steps).expect("No solution found"),
+    )
+}
+
+fn calculate_fuel<F>(crabs: &[i32], fuel_algorithm: F) -> Option<i32>
 where
     F: Fn(i32, i32) -> i32,
 {
@@ -31,18 +36,15 @@ where
     positions
         .iter()
         .map(|pos| {
-            (
-                crabs
-                    .iter()
-                    .map(|crab| fuel_algorithm(*crab, *pos))
-                    .sum::<i32>(),
-                *pos,
-            )
+            crabs
+                .iter()
+                .map(|crab| fuel_algorithm(*crab, *pos))
+                .sum::<i32>()
         })
         .min()
 }
 
 fn fuel_steps(crab: i32, position: i32) -> i32 {
-    let distance = i32::abs(crab - position);
-    (1..=distance).sum()
+    let n = i32::abs(crab - position);
+    n * (n + 1) / 2
 }
