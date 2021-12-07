@@ -1,5 +1,6 @@
-use std::fs;
 use itertools::Itertools;
+use std::fs;
+use itertools::MinMaxResult::MinMax;
 
 fn main() {
     let crabs: Vec<i32> = fs::read_to_string("inputs/day07.txt")
@@ -10,13 +11,37 @@ fn main() {
         .split(',')
         .filter_map(|v| v.parse::<i32>().ok())
         .collect();
-    let (fuel, pos) = calculate_fuel(&crabs).expect("No solution found");
+    let (fuel, pos) =
+        calculate_fuel(&crabs, |crab, pos| i32::abs(crab - pos)).expect("No solution found");
+    println!("Position: {}, Fuel: {}", pos, fuel);
+    let (fuel, pos) =
+        calculate_fuel(&crabs, fuel_steps).expect("No solution found");
     println!("Position: {}, Fuel: {}", pos, fuel);
 }
 
-fn calculate_fuel(crabs: &[i32]) -> Option<(i32, i32)> {
-    let positions = crabs.iter().sorted().dedup().collect::<Vec<&i32>>();
-    positions.iter().map(|pos| {
-        (crabs.iter().map(|crab| i32::abs(crab - **pos)).sum::<i32>(), **pos)
-    }).min()
+fn calculate_fuel<F>(crabs: &[i32], fuel_algorithm: F) -> Option<(i32, i32)>
+    where
+        F: Fn(i32, i32) -> i32,
+{
+    let positions = match crabs.iter().minmax() {
+        MinMax(a, b) => ((*a)..=(*b)).collect_vec(),
+        _ => return None
+    };
+    positions
+        .iter()
+        .map(|pos| {
+            (
+                crabs
+                    .iter()
+                    .map(|crab| fuel_algorithm(*crab, *pos))
+                    .sum::<i32>(),
+                *pos,
+            )
+        })
+        .min()
+}
+
+fn fuel_steps(crab: i32, position: i32) -> i32 {
+    let distance = i32::abs(crab - position);
+    (1..=distance).sum()
 }
