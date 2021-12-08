@@ -8,18 +8,13 @@ pub fn determine_pattern(wires: &str) -> HashMap<char, char> {
     let all_chars = wires.iter().flat_map(|w| w.chars()).counts();
     for x in 'a'..='g' {
         let count = all_chars.get(&x).unwrap();
-        if count == &9 {
-            results.insert('f', x);
-            continue;
-        }
-        if count == &4 {
-            results.insert('e', x);
-            continue;
-        }
-        if count == &6 {
-            results.insert('b', x);
-            continue;
-        }
+        let c = match *count {
+            9 => 'f',
+            4 => 'e',
+            6 => 'b',
+            _ => continue,
+        };
+        results.insert(c, x);
     }
 
     find_char(&wires, &mut results, 2, 'c');
