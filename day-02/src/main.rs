@@ -1,10 +1,10 @@
-use std::fs;
+use std::{fs, num::ParseIntError};
 
 fn main() {
     let actions: Vec<Action> = fs::read_to_string("inputs/day02.txt")
         .expect("Unable to read input")
         .lines()
-        .filter_map(Action::from_string)
+        .filter_map(|line| Action::try_from(line).ok())
         .collect();
     let (depth, pos) = actions
         .iter()
@@ -32,15 +32,28 @@ enum Action {
     Up(i32),
 }
 
-impl Action {
-    pub fn from_string(string: &str) -> Option<Self> {
+enum ActionError {
+    ParseIntError(ParseIntError),
+    NoValueError,
+    InvalidAction,
+}
+
+impl From<ParseIntError> for ActionError {
+    fn from(error: ParseIntError) -> Self {
+        ActionError::ParseIntError(error)
+    }
+}
+
+impl TryFrom<&str> for Action {
+    type Error = ActionError;
+    fn try_from(string: &str) -> Result<Self, Self::Error> {
         let split: Vec<&str> = string.split(' ').collect();
-        let number: i32 = split.last()?.parse::<i32>().ok()?;
-        match *split.first()? {
-            "forward" => Some(Self::Forward(number)),
-            "down" => Some(Self::Down(number)),
-            "up" => Some(Self::Up(number)),
-            _ => None,
+        let number: i32 = split.last().ok_or(ActionError::NoValueError)?.parse()?;
+        match *split.first().ok_or(ActionError::NoValueError)? {
+            "forward" => Ok(Self::Forward(number)),
+            "down" => Ok(Self::Down(number)),
+            "up" => Ok(Self::Up(number)),
+            _ => Err(ActionError::InvalidAction),
         }
     }
 }
