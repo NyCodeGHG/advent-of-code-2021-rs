@@ -4,7 +4,7 @@ fn main() {
     let numbers: Vec<i32> = fs::read_to_string("inputs/day01.txt")
         .expect("Unable to read input")
         .lines()
-        .filter_map(|line| line.parse::<i32>().ok())
+        .filter_map(|line| line.parse().ok())
         .collect();
 
     let first = numbers
