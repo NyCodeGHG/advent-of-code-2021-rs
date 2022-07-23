@@ -1,3 +1,7 @@
+#![feature(test)]
+
+extern crate test;
+
 use std::{collections::HashMap, fs, hash::Hash};
 
 fn main() -> Result<(), String> {
@@ -116,4 +120,15 @@ fn bits_to_int(bits: &[u32]) -> i32 {
         2,
     )
     .unwrap_or(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_performance(b: &mut Bencher) {
+        b.iter(main)
+    }
 }
