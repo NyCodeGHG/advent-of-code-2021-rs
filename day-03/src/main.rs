@@ -1,3 +1,7 @@
+#![feature(test)]
+
+extern crate test;
+
 use std::fs;
 
 fn main() {
@@ -73,4 +77,15 @@ fn read_input() -> (Vec<u32>, usize) {
         .map(|line| u32::from_str_radix(line, 2).unwrap())
         .collect();
     (numbers, length)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn bench_performance(b: &mut Bencher) {
+        b.iter(main)
+    }
 }
