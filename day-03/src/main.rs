@@ -1,119 +1,52 @@
-use std::{collections::HashMap, fs, hash::Hash};
+use std::fs;
 
-fn main() -> Result<(), String> {
-    let numbers: Vec<Vec<u32>> = fs::read_to_string("inputs/day03.txt")
-        .expect("Unable to read input")
+fn main() {
+    let (numbers, length) = read_input();
+    let gamma = construct_number(length, &numbers, |zeros, ones| {
+        if zeros.len() > ones.len() {
+            0
+        } else {
+            1
+        }
+    });
+    dbg!(gamma);
+    let epsilon = construct_number(length, &numbers, |zeros, ones| {
+        if zeros.len() > ones.len() {
+            1
+        } else {
+            0
+        }
+    });
+    dbg!(epsilon);
+    dbg!(gamma * epsilon);
+}
+
+fn construct_number<F>(length: usize, numbers: &[u32], value: F) -> usize
+where
+    F: Fn(Vec<&u32>, Vec<&u32>) -> usize,
+{
+    (0..length)
+        .rev()
+        .map(|length| get_common_bit(numbers, length, &value))
+        .fold(0, |acc, value| acc << 1 | value)
+}
+
+fn get_common_bit<F>(numbers: &[u32], length: usize, value: F) -> usize
+where
+    F: Fn(Vec<&u32>, Vec<&u32>) -> usize,
+{
+    let (zeros, ones): (Vec<&u32>, Vec<&u32>) = numbers
+        .iter()
+        .partition(|number| *number >> length & 0b1 == 0);
+    value(zeros, ones)
+}
+
+fn read_input() -> (Vec<u32>, usize) {
+    let content = fs::read_to_string("inputs/day03.txt").expect("Unable to read input");
+    let length = content.lines().next().unwrap().len();
+    let numbers = content
         .lines()
-        .map(|line| line.chars().filter_map(|char| char.to_digit(10)).collect())
+        .map(|line| u32::from_str_radix(line, 2).unwrap())
         .collect();
-
-    let mut gamma_bits: Vec<u32> = Vec::new();
-    let mut epsilon_bits: Vec<u32> = Vec::new();
-
-    let length = numbers.first().unwrap().len();
-    for i in 0..length {
-        let numbers: Vec<&u32> = numbers.iter().filter_map(|v| v.get(i)).collect();
-        let most = match get_most_frequent_value(&numbers) {
-            Some(n) => n,
-            None => continue,
-        };
-        let least = match get_least_frequent_value(&numbers) {
-            Some(n) => n,
-            None => continue,
-        };
-        gamma_bits.push(*most);
-        epsilon_bits.push(*least);
-    }
-
-    let gamma = bits_to_int(&gamma_bits);
-    let epsilon = bits_to_int(&epsilon_bits);
-    let power = gamma * epsilon;
-    println!("Power: {}", power);
-
-    let oxygen = find_oxygen_generator_rating(&numbers, 0).ok_or("Cannot find oxygen")?;
-    let co2 = find_co2_scrubber_rating(&numbers, 0).ok_or("Cannot find co2")?;
-    println!("Life Support Rating: {}", oxygen * co2);
-    Ok(())
-}
-
-fn find_oxygen_generator_rating(numbers: &[Vec<u32>], position: usize) -> Option<i32> {
-    if numbers.len() == 1 {
-        return numbers.first().map(|value| bits_to_int(value));
-    }
-    if position >= numbers.first().unwrap().len() {
-        return None;
-    }
-    let pos_numbers: Vec<&u32> = numbers.iter().filter_map(|v| v.get(position)).collect();
-    let most = get_most_frequent_value(&pos_numbers);
-    let target_value = most.unwrap_or(&1);
-    let numbers: Vec<Vec<u32>> = numbers
-        .iter()
-        .filter(|number| number.get(position).unwrap() == target_value)
-        .cloned()
-        .collect();
-    find_oxygen_generator_rating(&numbers, position + 1)
-}
-
-fn find_co2_scrubber_rating(numbers: &[Vec<u32>], position: usize) -> Option<i32> {
-    if numbers.len() == 1 {
-        return numbers.first().map(|value| bits_to_int(value));
-    }
-    if position >= numbers.first().unwrap().len() {
-        return None;
-    }
-    let pos_numbers: Vec<&u32> = numbers.iter().filter_map(|v| v.get(position)).collect();
-    let least = get_least_frequent_value(&pos_numbers);
-    let target_value = least.unwrap_or(&0);
-    let numbers: Vec<Vec<u32>> = numbers
-        .iter()
-        .filter(|number| number.get(position).unwrap() == target_value)
-        .cloned()
-        .collect();
-    find_co2_scrubber_rating(&numbers, position + 1)
-}
-
-fn get_most_frequent_value<T: Ord + Hash + Copy>(values: &[T]) -> Option<T> {
-    let mut counter: HashMap<T, u32> = HashMap::new();
-    for value in values {
-        counter.insert(*value, counter.get(value).unwrap_or(&0) + 1);
-    }
-    let highest = counter.iter().map(|(_, i)| i).max()?;
-    let most_values: Vec<&T> = counter
-        .iter()
-        .filter(|(_, count)| highest == *count)
-        .map(|value| value.0)
-        .collect();
-    if most_values.len() != 1 {
-        return None;
-    }
-    Some(**most_values.get(0).unwrap())
-}
-
-fn get_least_frequent_value<T: Ord + Hash + Copy>(values: &[T]) -> Option<T> {
-    let mut counter: HashMap<T, u32> = HashMap::new();
-    for value in values {
-        counter.insert(*value, counter.get(value).unwrap_or(&0) + 1);
-    }
-    let lowest = counter.iter().map(|(_, i)| i).min()?;
-    let least_values: Vec<&T> = counter
-        .iter()
-        .filter(|(_, count)| lowest == *count)
-        .map(|value| value.0)
-        .collect();
-    if least_values.len() != 1 {
-        return None;
-    }
-    Some(**least_values.get(0).unwrap())
-}
-
-fn bits_to_int(bits: &[u32]) -> i32 {
-    i32::from_str_radix(
-        &bits
-            .iter()
-            .map(|bit| bit.to_string())
-            .collect::<Vec<String>>()
-            .join(""),
-        2,
-    )
-    .unwrap_or(0)
+    (numbers, length)
 }
